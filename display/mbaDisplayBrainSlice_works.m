@@ -25,7 +25,7 @@ function h = mbaDisplayBrainSlice(nifti, slice, cmap, rescale,alpha)
 %
 % OUTOPUT:
 %     h   - Handle for the image (a matlab surface) appeared in the current axis. 
-%           You can remove the image from the figure with: delete(h). Or
+%           You can remove the image from the figure with: delete(h). Or/N/dc2/projects/lifebid/HCP/Dan/matlab_code/mba/display/mba_DisplayBrainSlice_works.m
 %           get all its image properties with set(h,'PropertyName',PropertiVal)
 %
 % EXAMPLE: h = feDisplayBrainSlice(nifti, [-20 0 0 10])

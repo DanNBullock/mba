@@ -6,7 +6,7 @@ function [niftiRoiName, niftiRoi] = fs_labelFileToNiftiRoi(fs_subject,labelFileN
 %
 % This function loads a FreeSurfer label file and generates an volume nifti
 % with the numerical values of the label at the x,y,z location of the label.
-% 
+%
 % INPUTS:
 %      fs_subject    - The FreeSurfer folder for the subject. It is
 %                      a folder under $SUBJECTS_DIR
@@ -16,71 +16,72 @@ function [niftiRoiName, niftiRoi] = fs_labelFileToNiftiRoi(fs_subject,labelFileN
 %      hemisphere    - Optional. Either 'lh' or 'rh'. This is necessary to load the
 %                      FreeSurfer surface and fill in the ROi into the
 %                      gray matter. If this inptu is omitted we assume that
-%                      the labelFileName lives under: 
+%                      the labelFileName lives under:
 %                      $SUBJECTS_DIR/<this_subject>/label/
 %                      and that the file name starts with either 'lh' or
 %                      'rh' which is the standard for labels created
 %                      automatically with the FreeSurfer autsegmentation.
-% 
+%
 %      regMgzFile    - Optional. The fullpath to a file to be used for registering
 %                      the nifti ROI. Generally we register everything to
-%                      ACPC, which means to the T1 volume. 
-%                      If the regMgzFile is NOT passed in and the file 
+%                      ACPC, which means to the T1 volume.
+%                      If the regMgzFile is NOT passed in and the file
 %                      $SUBJECTS_DIR/<this_subject>/mri/rawavg.mgz exists,
 %                      we align automatically to such file. Which is our
 %                      standard for ACPC.
-%     smoothingKernel- Size in mm of the smoothing kernel applied to the ROI.  
+%     smoothingKernel- Size in mm of the smoothing kernel applied to the ROI.
 %
 % OUTPUTS:
 %        niftiRoiName - The fullpath to where the nifti file was written.
 %        niftiRoi     - The nifti-1 structure just created.
-% 
-% EXAMPLE USAGE: 
+%
+% EXAMPLE USAGE:
 %       labelFileName = '/biac2/wandell2/data/anatomy/pestilli_test/label/lh.V1.label'
 %       niftiRoiName  = '/biac2/wandell2/data/anatomy/pestilli_test/label/lh_V1.nii.gz';
 %       regMgzFile    = '/biac2/wandell2/data/anatomy/pestilli_test/mri/rawavg.mgz';
 %       fs_labelFileToNiftiRoi(labelFileName,niftiRoiName,regMgzFile);
-% 
+%
 % Written by Franco Pestilli (c) Stanford University, Vistasoft 2013
+
+if ~exist('fsSubDir') fsSubDir   = getenv('SUBJECTS_DIR');end
+
+% Get the .label file.
+if exist('labelFileName')
+    [fileName, path] = uigetfile({'*'},'Select the Freesurfer .label file',fsSubDir);
     
-if notDefined('fsSubDir'), fsSubDir   = getenv('SUBJECTS_DIR');end
-    
-% Get the .label file. 
-if notDefined('labelFileName')
-    [fileName, path] = uigetfile({'*'},'Select the Freesurfer .label file',fsSubDir);    
     if isnumeric(fileName); disp('Canceled by user.'); return; end
     labelFileName = fullfile(path,fileName);
 else
     p = fileparts(labelFileName);
     if isempty(p)
-        labelFileName = fullfile(fsSubDir,fs_subject,'label',labelFileName);       
+        labelFileName = fullfile(fsSubDir,fs_subject,'label',labelFileName);
         fprintf('\n[%s] Label name passed without fullpath.\n Assuming that the label in default location:\n%s\n', ...
             mfilename,labelFileName)
-
+        
     end
 end
 
-if notDefined('hemisphere')
+if ~exist('hemisphere')
     fprintf('\n[%s] No hemisphere passed in.\n assuming that the label is stored under the FreeSurfer subject folder.\n',mfilename)
     [~,f] = fileparts(labelFileName);
-    hemisphere = f(1:2); 
+    hemisphere = f(1:2);
 end
 
-if notDefined('regMgzFile')
+if ~exist('regMgzFile')
     fprintf('[%s] No registration file passed in, attempting to register to  %s/%s/mri/rawavg.mgz.\n', ...
-            mfilename,fsSubDir,fs_subject) 
+        mfilename,fsSubDir,fs_subject)
     regMgzFile = fullfile(fsSubDir,fs_subject,'mri/rawavg.mgz');
 end
 
-if notDefined('smoothingKernel'), smoothingKernel = 3;   end
+if ~exist('smoothingKernel'), smoothingKernel = 3;   end
 
 % Now we need to create a temporary registration file.
-% 
-% That will inform mri_lable2vol how to align the label 
+%
+% That will inform mri_lable2vol how to align the label
 % to the space we want.
 tmpRegFile = tempname(tempdir);
 cmd = sprintf('!tkregister2 --mov %s --subject %s --noedit --regheader --reg %s.dat',...
-      regMgzFile,fs_subject,tmpRegFile);
+    regMgzFile,fs_subject,tmpRegFile);
 eval(cmd);
 
 % Create the nifti file for the label.
@@ -88,7 +89,7 @@ eval(cmd);
 % --proj frac 0 1 .1 % fill in all the cortical gray matter
 % --fillthresh .3    % require that a  voxel be filled at least 30% by the label
 cmd = sprintf('!mri_label2vol --subject %s --label %s --o %s.nii.gz --hemi %s --reg %s.dat --temp %s --proj frac 0 1 .1 --fillthresh .01', ...
-      fs_subject,labelFileName,niftiRoiName,hemisphere, tmpRegFile,  regMgzFile);
+    fs_subject,labelFileName,niftiRoiName,hemisphere, tmpRegFile,  regMgzFile);
 eval(cmd);
 
 % Smooth the FreeSurfer ROI they tend to be a bit sparse.

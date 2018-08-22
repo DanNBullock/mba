@@ -1,4 +1,4 @@
-function cmd = fs_annotationToLabelFiles(fs_subject,annotationFileName,hemisphere,labelsDir,fsSubDir)
+edfunction cmd = fs_annotationToLabelFiles(fs_subject,annotationFileName,hemisphere,labelsDir,fsSubDir)
 %
 % Creates .label files from a FreeSurfer annotation file, which is created
 % during the reconall segementation and percellation process.
