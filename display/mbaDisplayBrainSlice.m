@@ -71,7 +71,6 @@ axis off
 
 % Rescale the axis to fit the img
 if rescale == 1
-    keyboard
     % Old axis values
     ax = axis;
     % New axis scaling
